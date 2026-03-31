@@ -1,0 +1,896 @@
+
+  /**************************************************************************
+   * ScoutMe — Final single-file app (FINAL)
+   * - Integrated Marketplace stores (all 9 provided)
+   * - Team Tokens & NFT Players (images from `image/`)
+   * - Registration overlay, editable profile, wallet simulation
+   * - Animated background + improved UI styling
+   *
+   * Place image folder next to this file:
+   * image/logo/logo.png
+   * image/players/*.png
+   * image/teams/*.png
+   * image/stores/*.png
+   *
+   **************************************************************************/
+
+  // ----- Config & Storage keys -----
+  const APP_ADDRESS = 'GC7KBK7553NTMDD4O6OJBUY2QOPSVW7SKXWOJITVMKPIVD6ZDSPMGWPH';
+  const STORAGE = {
+    ME:'fm_me',
+    PLAYERS:'fm_players',
+    CLUBS:'fm_clubs',
+    SCOUTS:'fm_scouts',
+    TXS:'fm_txs',
+    WALLET:'fm_wallet',
+    LANG:'fm_lang',
+    APP_FEE:'fm_fee'
+  };
+  const BASE_IMG = 'image';
+
+  // ----- PI API KEY placeholder (client-side demo only) -----
+  const PI_API_KEY = localStorage.getItem('PI_API_KEY') || '';
+
+  // ----- Pages & i18n (kept minimal; main UI is Arabic by default) -----
+  const PAGES = ['home','discover','message','matches','profile','become','aianalysis','pitalk','paralympic','scoutdashboard','community','crowdfunding','wallet','settings','teamtokens','nftplayers','marketplace','appintro'];
+  const I18N = {
+    ar: { home:'الصفحة الرئيسية', discover:'استكشاف', message:'الرسائل', matches:'المطابقة', profile:'الملف', become:'كن لاعباً', aianalysis:'تحليل ذكي', pitalk:'Pi Talkzone', paralympic:'البارالمبيك', scoutdashboard:'لوحة الكشاف', community:'المجتمع', crowdfunding:'التمويل الجماعي', wallet:'المحفظة', settings:'الإعدادات', marketplace:'السوق', welcome:'مرحبًا', register:'التسجيل', logout:'تسجيل خروج', send:'إرسال', receive:'استلام', address_label:'العنوان', balance:'الرصيد', players:'اللاعبون', clubs:'الأندية', scouts:'الكشافون', search:'بحث',
+      welcome_video:'🎥 مرحبا', wallet_marketplace:'المحفظة / السوق', view:'عرض', filter_desc:'فلترة اللاعبين/الأندية حسب الرياضة/الدولة/العمر/الخبرة',
+      direct_chat:'مكان الرسائل (قريبًا)', matches_desc:'المطابقات بالذكاء الاصطناعي ستظهر هنا',
+      copy_address:'نسخ العنوان', address_copied:'تم نسخ العنوان', network_switched:'تم تغيير الشبكة إلى',
+      enter_address_amount:'أدخل العنوان والمبلغ', insufficient_balance:'الرصيد غير كافٍ', sent_simulated:'تم الإرسال (محاكاة).',
+      send_title:'إرسال', receive_title:'استلام', transactions_title:'المعاملات',
+      use_address_receive:'استعمل العنوان أعلاه لاستلام Pi على الشبكة المختارة.',
+      no_transactions:'لا توجد معاملات بعد', no_results:'لا توجد نتائج',
+      discover_country_ph:'ابحث عن اللاعبين - الدولة', pi_amount_ph:'كمية Pi',
+      discover_tagline:'اكتشف مستقبل الرياضة مع FREEMOVE بدعم Pi Network',
+      sign_in_pi:'المرجو تسجيل الدخول عبر Pi.',
+      wallet_label:'المحفظة', country_label:'الدولة', sport_label:'الرياضة', edit_profile:'تعديل الملف',
+      full_name:'الاسم الكامل', email:'البريد الإلكتروني', sports_ph:'الرياضات (مفصولة بفاصلة)', country:'الدولة', youtube_optional:'رابط YouTube (اختياري)', submit:'إرسال',
+      ai_desc:'تحليل الأداء وتقارير أسبوعية (قريبًا)', run_ai:'تشغيل الذكاء الاصطناعي (محاكاة)',
+      pitalk_desc:'نقاشات المجتمع ومواضيع Pi', paralympic_desc:'قسم خاص برياضات ذوي الاحتياجات',
+      scout_desc:'أدوات الكشاف: بحث وتواصل (قد تكون مدفوعة)', crowdfunding_desc:'إنشاء مشاريع لدعم المواهب',
+      app_commission:'عمولة التطبيق (%)', save:'حفظ', dev_note:'ملاحظة: للدفع الحقيقي عبر Pi استعمل سيرفر/Function لحماية PI_API_KEY.',
+      team_tokens:'توكنات الفرق', price:'السعر', buy:'شراء', nft_players:'NFT اللاعبين', value:'القيمة', marketplace_desc:'اكتشف متاجر شريكة داخل نظام Pi', visit:'زيارة',
+      about_app:'حول التطبيق',
+      player_not_found:'لم يتم العثور على اللاعب', no_image:'لا توجد صورة', age:'العمر', exp:'الخبرة', video:'فيديو', request_contact:'طلب تواصل (مدفوع)', back:'رجوع',
+      community_desc:'مجموعات، أحداث، ولقاءات',
+      pay_contact_prompt:'ادفع 1 Pi لطلب التواصل (تجربة). عمولة التطبيق: {fee}%. متابعة؟',
+      contact_paid:'تم دفع طلب التواصل (تجربة). يمكنك الآن مراسلة اللاعب.',
+      name_email_required:'الاسم والبريد الإلكتروني مطلوبان',
+      submitted_player:'تم الإرسال — أصبحت الآن ضمن قائمة اللاعبين.',
+      ai_running:'جاري تشغيل تحليل الذكاء الاصطناعي (محاكاة)...',
+      ai_report:'تقرير الذكاء الاصطناعي',
+      ai_report_body:'السرعة: جيدة • اللياقة: فوق المتوسط • اقتراح: جناح',
+      settings_saved:'تم حفظ الإعدادات',
+      edit_profile_title:'تعديل الملف',
+      name_ph:'الاسم',
+      wallet_address_ph:'عنوان المحفظة أو رابط',
+      sports_ph2:'الرياضات (مفصولة بفاصلة)',
+      cancel:'إلغاء',
+      no_user:'لا يوجد مستخدم',
+      profile_updated:'تم تحديث الملف الشخصي',
+      token_not_found:'التوكن غير موجود',
+      buy_token_confirm:'شراء توكن {team} مقابل {price} Pi؟',
+      purchased_simulated:'تم الشراء (محاكاة)',
+      not_found:'غير موجود',
+      buy_nft:'شراء NFT',
+      buy_nft_confirm:'شراء NFT {name} مقابل {price} Pi؟',
+      nft_purchased_simulated:'تم شراء NFT (محاكاة)',
+      store_not_found:'المتجر غير موجود',
+      how_integrates:'كيف يتكامل مع ScoutMe',
+      description_not_available:'الوصف غير متوفر',
+      pi_simulated:'تم التسجيل عبر Pi (محاكاة).'
+    },
+    en: { home:'Home', discover:'Discover', message:'Message', matches:'Matches', profile:'Profile', become:'Become', aianalysis:'AI Analysis', pitalk:'Pi Talkzone', paralympic:'Paralympic', scoutdashboard:'Scout Dashboard', community:'Community', crowdfunding:'Crowdfunding', wallet:'Wallet', settings:'Settings', marketplace:'Marketplace', welcome:'Welcome', register:'Register', logout:'Logout', send:'Send', receive:'Receive', address_label:'Address', balance:'Balance', players:'Players', clubs:'Clubs', scouts:'Scouts', search:'Search',
+      welcome_video:'🎥 Welcome', wallet_marketplace:'Wallet / Marketplace', view:'View', filter_desc:'Filter players/clubs by sport/country/age/exp',
+      direct_chat:'Direct chat placeholder (integrate chat service later)', matches_desc:'AI-based matches will be shown here',
+      copy_address:'Copy address', address_copied:'Address copied', network_switched:'Network switched to',
+      enter_address_amount:'Enter address and amount', insufficient_balance:'Insufficient balance', sent_simulated:'Sent (simulated).',
+      send_title:'Send', receive_title:'Receive', transactions_title:'Transactions',
+      use_address_receive:'Use the address above to receive Pi on the selected network.',
+      no_transactions:'No transactions yet', no_results:'No results',
+      discover_country_ph:'Search players - country', pi_amount_ph:'Pi amount',
+      discover_tagline:'Discover the future of sports with FREEMOVE powered by Pi Network',
+      sign_in_pi:'Please sign in with Pi.',
+      wallet_label:'Wallet', country_label:'Country', sport_label:'Sport', edit_profile:'Edit profile',
+      full_name:'Full name', email:'Email', sports_ph:'Sports (comma separated)', country:'Country', youtube_optional:'YouTube link (optional)', submit:'Submit',
+      ai_desc:'Automatic performance analysis and weekly reports (placeholder)', run_ai:'Run AI (simulated)',
+      pitalk_desc:'Community discussions & Pi topics', paralympic_desc:'Dedicated para sports section',
+      scout_desc:'Scout tools: search & contact (contact requests may be paid)', crowdfunding_desc:'Create projects to support talents',
+      app_commission:'App commission (%)', save:'Save', dev_note:'Development note: For real Pi payments implement server function with PI_API_KEY server-side.',
+      team_tokens:'Team Tokens', price:'Price', buy:'Buy', nft_players:'NFT Players', value:'Value', marketplace_desc:'Explore partner stores integrated with Pi ecosystem', visit:'Visit',
+      about_app:'About',
+      player_not_found:'Player not found', no_image:'No image', age:'Age', exp:'Exp', video:'Video', request_contact:'Request Contact (Paid)', back:'Back',
+      community_desc:'Groups, events, and meetups',
+      pay_contact_prompt:'Pay 1 Pi to request contact (demo). App fee: {fee}%. Continue?',
+      contact_paid:'Contact request paid (demo). Now you can message the player.',
+      name_email_required:'Name & email required',
+      submitted_player:'Submitted — you are now listed as a player.',
+      ai_running:'Running simulated AI analysis...',
+      ai_report:'AI Report',
+      ai_report_body:'Speed: Good • Stamina: Above Average • Suggested: Winger',
+      settings_saved:'Settings saved',
+      edit_profile_title:'Edit profile',
+      name_ph:'Name',
+      wallet_address_ph:'Wallet address or link',
+      sports_ph2:'Sports (comma separated)',
+      cancel:'Cancel',
+      no_user:'No user',
+      profile_updated:'Profile updated',
+      token_not_found:'Token not found',
+      buy_token_confirm:'Buy {team} token for {price} Pi?',
+      purchased_simulated:'Purchased (simulated)',
+      not_found:'Not found',
+      buy_nft:'Buy NFT',
+      buy_nft_confirm:'Buy {name} NFT for {price} Pi?',
+      nft_purchased_simulated:'NFT purchased (simulated)',
+      store_not_found:'Store not found',
+      how_integrates:'How it integrates with ScoutMe',
+      description_not_available:'Description not available',
+      pi_simulated:'Signed in with Pi (simulated).'
+    },
+    fr: { home:'Accueil', discover:'Découvrir', message:'Message', matches:'Matches', profile:'Profil', become:'Devenir', aianalysis:'Analyse IA', pitalk:'Pi Talkzone', paralympic:'Paralympique', scoutdashboard:'Tableau', community:'Communauté', crowdfunding:'Financement', wallet:'Portefeuille', settings:'Paramètres', marketplace:'Marché', welcome:'Bienvenue', register:'S\'inscrire', logout:'Se déconnecter', send:'Envoyer', receive:'Recevoir', address_label:'Adresse', balance:'Solde', players:'Joueurs', clubs:'Clubs', scouts:'Recruteurs', search:'Rechercher',
+      welcome_video:'🎥 Bienvenue', wallet_marketplace:'Portefeuille / Marché', view:'Voir', filter_desc:'Filtrer joueurs/clubs par sport/pays/âge/exp',
+      direct_chat:'Espace messages (à venir)', matches_desc:'Les matchs IA seront affichés ici',
+      copy_address:'Copier l\'adresse', address_copied:'Adresse copiée', network_switched:'Réseau changé vers',
+      enter_address_amount:'Entrez l\'adresse et le montant', insufficient_balance:'Solde insuffisant', sent_simulated:'Envoyé (simulation).',
+      send_title:'Envoyer', receive_title:'Recevoir', transactions_title:'Transactions',
+      use_address_receive:'Utilisez l\'adresse ci-dessus pour recevoir des Pi sur le réseau sélectionné.',
+      no_transactions:'Aucune transaction', no_results:'Aucun résultat',
+      discover_country_ph:'Rechercher joueurs - pays', pi_amount_ph:'Montant Pi',
+      discover_tagline:'Discover the future of sports with FREEMOVE powered by Pi Network',
+      sign_in_pi:'Veuillez vous connecter avec Pi.',
+      wallet_label:'Portefeuille', country_label:'Pays', sport_label:'Sport', edit_profile:'Modifier le profil',
+      full_name:'Nom complet', email:'Email', sports_ph:'Sports (séparés par virgule)', country:'Pays', youtube_optional:'Lien YouTube (optionnel)', submit:'Envoyer',
+      ai_desc:'Analyse automatique et rapports hebdomadaires (à venir)', run_ai:'Lancer IA (simulation)',
+      pitalk_desc:'Discussions & sujets Pi', paralympic_desc:'Section para-sports',
+      scout_desc:'Outils recruteur: recherche & contact', crowdfunding_desc:'Créer des projets pour soutenir les talents',
+      app_commission:'Commission de l\'app (%)', save:'Enregistrer', dev_note:'Note: pour des paiements réels, utilisez une fonction serveur pour protéger PI_API_KEY.',
+      team_tokens:'Team Tokens', price:'Prix', buy:'Acheter', nft_players:'NFT Joueurs', value:'Valeur', marketplace_desc:'Explorer des boutiques partenaires', visit:'Visiter',
+      about_app:'À propos',
+      player_not_found:'Joueur introuvable', no_image:'Pas d\'image', age:'Âge', exp:'Exp', video:'Vidéo', request_contact:'Demander contact (payant)', back:'Retour',
+      community_desc:'Groupes, événements et rencontres',
+      pay_contact_prompt:'Payer 1 Pi pour demander le contact (démo). Commission: {fee}%. Continuer?',
+      contact_paid:'Demande de contact payée (démo). Vous pouvez maintenant contacter le joueur.',
+      name_email_required:'Nom et email requis',
+      submitted_player:'Envoyé — vous êtes maintenant listé comme joueur.',
+      ai_running:'Analyse IA simulée en cours...',
+      ai_report:'Rapport IA',
+      ai_report_body:'Vitesse: Bonne • Endurance: Au-dessus de la moyenne • Suggestion: Ailier',
+      settings_saved:'Paramètres enregistrés',
+      edit_profile_title:'Modifier le profil',
+      name_ph:'Nom',
+      wallet_address_ph:'Adresse portefeuille ou lien',
+      sports_ph2:'Sports (séparés par virgule)',
+      cancel:'Annuler',
+      no_user:'Aucun utilisateur',
+      profile_updated:'Profil mis à jour',
+      token_not_found:'Token introuvable',
+      buy_token_confirm:'Acheter le token {team} pour {price} Pi?',
+      purchased_simulated:'Acheté (simulation)',
+      not_found:'Introuvable',
+      buy_nft:'Acheter NFT',
+      buy_nft_confirm:'Acheter NFT {name} pour {price} Pi?',
+      nft_purchased_simulated:'NFT acheté (simulation)',
+      store_not_found:'Boutique introuvable',
+      how_integrates:'Comment il s\'intègre à ScoutMe',
+      description_not_available:'Description indisponible',
+      pi_simulated:'Connexion Pi (simulation).'
+    }
+  };
+
+  // ----- Helpers -----
+  const $ = id => document.getElementById(id);
+  const getLang = ()=> localStorage.getItem(STORAGE.LANG) || 'ar';
+  const setLang = (l)=> { localStorage.setItem(STORAGE.LANG, l); renderLang(); showPage(currentPage); }
+  const t = (k)=> I18N[getLang()]?.[k] || k;
+  const uid = (p='id')=> p + Math.random().toString(36).slice(2,9);
+
+  // ----- Seed original demo data if empty -----
+  function seed(){
+    if(!localStorage.getItem(STORAGE.PLAYERS)){
+      const players = [
+        {id:uid('pl'), name:'Ali Ben', sports:['كرة قدم'], country:'تونس', age:19, exp:2, video:'https://youtu.be/7MzPL390mPM'},
+        {id:uid('pl'), name:'Sara M', sports:['كرة سلة'], country:'المغرب', age:21, exp:3, video:''}
+      ];
+      localStorage.setItem(STORAGE.PLAYERS, JSON.stringify(players));
+    }
+    if(!localStorage.getItem(STORAGE.CLUBS)){
+      const clubs = [
+        {id:uid('cl'), name:'Real Madrid', sport:'كرة قدم', country:'Spain'},
+        {id:uid('cl'), name:'FC Bayern', sport:'كرة قدم', country:'Germany'}
+      ];
+      localStorage.setItem(STORAGE.CLUBS, JSON.stringify(clubs));
+    }
+    if(!localStorage.getItem(STORAGE.SCOUTS)){
+      const scouts = [{id:uid('sc'), name:'Scout One', sport:'كرة قدم', country:'Spain', exp:5}];
+      localStorage.setItem(STORAGE.SCOUTS, JSON.stringify(scouts));
+    }
+    if(!localStorage.getItem(STORAGE.TXS)) localStorage.setItem(STORAGE.TXS, JSON.stringify([]));
+    if(!localStorage.getItem(STORAGE.WALLET)) localStorage.setItem(STORAGE.WALLET, JSON.stringify({balance:20, network:'testnet'}));
+    if(!localStorage.getItem(STORAGE.APP_FEE)) localStorage.setItem(STORAGE.APP_FEE,'10');
+  }
+  seed();
+
+  // ----- App state -----
+  let currentPage = 'home';
+
+  // ----- Pi SDK auth (Pi Browser) -----
+  let __piInitDone = false;
+  function isPiSdkAvailable(){
+    return typeof window !== 'undefined' && window.Pi && typeof window.Pi.authenticate === 'function';
+  }
+  async function piSignIn(){
+    try{
+      if(isPiSdkAvailable()){
+        if(!__piInitDone && typeof window.Pi.init === 'function'){
+          __piInitDone = true;
+          try{ window.Pi.init({ version: "2.0", sandbox: false }); } catch(e){}
+        }
+        const auth = await window.Pi.authenticate(["username"], ()=>{});
+        const username = auth?.user?.username || auth?.username || auth?.user?.name || ('PiUser'+Math.floor(Math.random()*900));
+        const piUser = { id: uid('me'), name: username, email:'', wallet:'', sports:[], country:'' };
+        localStorage.setItem(STORAGE.ME, JSON.stringify(piUser));
+        localStorage.setItem('sm_seen_overlay','true');
+        const regOverlay = document.getElementById('reg-overlay');
+        if(regOverlay) regOverlay.style.display = 'none';
+        initApp();
+        return;
+      }
+    } catch(err){
+      console.error('Pi sign-in failed:', err);
+    }
+    // fallback simulation (non-Pi Browser)
+    const piUser = { id: uid('me'), name: 'PiUser'+Math.floor(Math.random()*900), email:'', wallet: '', sports:[], country:'' };
+    localStorage.setItem(STORAGE.ME, JSON.stringify(piUser));
+    localStorage.setItem('sm_seen_overlay','true');
+    const regOverlay = document.getElementById('reg-overlay');
+    if(regOverlay) regOverlay.style.display = 'none';
+    initApp();
+    alert(t('pi_simulated'));
+  }
+  window.piSignIn = piSignIn;
+
+  // ----- UI: lang, nav, init -----
+  function renderLang(){
+    const lang = getLang();
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    const langToggle = document.getElementById('langToggle');
+    if(langToggle) langToggle.textContent = lang.toUpperCase();
+    PAGES.forEach(p=>{
+      const btn = document.querySelector('.navbtn[data-page="'+p+'"]');
+      if(btn) {
+        const icon = btn.textContent.trim().split(' ')[0] || '';
+        btn.innerHTML = icon + ' ' + (t(p) || p);
+      }
+    });
+    const sideWelcome = document.getElementById('side-welcome');
+    if(sideWelcome) sideWelcome.textContent = t('welcome');
+    const sideSub = document.getElementById('side-sub');
+    if(sideSub) sideSub.textContent = t('welcome') + ' • ' + t('home');
+    const el = document.getElementById('current-page-name');
+    if(el) el.textContent = t(currentPage) || '';
+    renderMobileNav();
+    updateUserAction();
+  }
+
+  // nav button wiring
+  document.querySelectorAll('.navbtn').forEach(b=> b.addEventListener('click', ()=> showPage(b.dataset.page)));
+  const langToggleBtn = document.getElementById('langToggle');
+  function cycleLang(){
+    const order = ['ar','en','fr'];
+    const cur = getLang();
+    const idx = order.indexOf(cur);
+    const next = order[(idx + 1) % order.length];
+    setLang(next);
+  }
+  if(langToggleBtn){
+    langToggleBtn.addEventListener('click', cycleLang);
+  }
+
+  // mobile nav wiring
+  document.querySelectorAll('#mobileNav button').forEach(b=> b.addEventListener('click', ()=> showPage(b.dataset.page)));
+  function renderMobileNav(){
+    const nav = document.getElementById('mobileNav');
+    if(!nav) return;
+    nav.querySelectorAll('button').forEach(btn=> btn.classList.toggle('active', btn.dataset.page === currentPage));
+    nav.querySelectorAll('[data-i18n]').forEach(el=> {
+      const k = el.getAttribute('data-i18n');
+      el.textContent = t(k);
+    });
+  }
+
+  // ----- MAIN: showPage (renders all screens) -----
+  function showPage(page){
+    currentPage = page;
+    document.querySelectorAll('.navbtn').forEach(b=> b.classList.toggle('active', b.dataset.page===page));
+    renderLang();
+    const c = document.getElementById('content');
+    const me = JSON.parse(localStorage.getItem(STORAGE.ME) || 'null');
+    // apply fade wrapper
+    c.innerHTML = `<div class="fade-enter" style="opacity:0"></div>`;
+    setTimeout(()=> {
+      let html = '';
+      // HOME
+      if(page === 'home'){
+        html += `<div class="card"><h3>${t('welcome')}${me?(', '+(me.name||'')) : ''}</h3><div class="muted">${t('players')}: ${JSON.parse(localStorage.getItem(STORAGE.PLAYERS)||'[]').length} • ${t('clubs')}: ${JSON.parse(localStorage.getItem(STORAGE.CLUBS)||'[]').length}</div></div>`;
+          html += `<div class="card" id="welcome-video" style="overflow:hidden; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.3); background-color:#121212; position:relative;">
+  <!-- النص يظهر فوق الصورة مباشرة -->
+  <h4 style="
+        position:absolute;
+        top:16px;
+        left:50%;
+        transform: translateX(-50%);
+        color:#fff;
+        z-index:10;
+        font-size:1.4rem;
+        text-align:center;
+        background-color: rgba(0,0,0,0.5);
+        padding: 6px 14px;
+        border-radius:6px;
+        font-weight:bold;
+      ">
+    ${t('welcome_video')}
+  </h4>
+
+  <!-- الحاوية للصورة -->
+  <div style="position:relative; padding-top:150%; overflow:hidden; border-radius:12px; background-color:#121212;">
+    <img src="image/scoutme11.png" 
+         alt="ScoutMe Logo Trophy" 
+         style="
+           position:absolute;
+           top:50%;
+           left:50%;
+           width:auto;
+           height:100%;
+           transform: translate(-50%, -50%) scale(1) rotate(0deg);
+           border-radius:12px;
+           filter: drop-shadow(0 0 15px #ff6600);
+           animation: heroMotion 25s infinite alternate ease-in-out;
+         "
+    >
+  </div>
+</div>
+
+<style>
+/* الخلفية العامة للصفحة */
+html, body {
+  background-color: #121212;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  height: 100%;
+}
+
+/* الحركة الديناميكية للصورة */
+@keyframes heroMotion {
+  0% { transform: translate(-52%, -48%) scale(1) rotate(-1deg); }
+  25% { transform: translate(-50%, -50%) scale(1.03) rotate(0deg); }
+  50% { transform: translate(-48%, -52%) scale(1.05) rotate(1deg); }
+  75% { transform: translate(-50%, -50%) scale(1.07) rotate(0deg); }
+  100% { transform: translate(-52%, -48%) scale(1.08) rotate(-1deg); }
+}
+</style>`;
+        html += `<div class="card"><div class="two"><button class="btn" onclick="navigate('discover')">${t('discover')}</button><button class="btn" onclick="navigate('marketplace')">${t('wallet_marketplace')}</button></div></div>`;
+
+        // recent players (with thumbs)
+        const players = JSON.parse(localStorage.getItem(STORAGE.PLAYERS) || '[]');
+        html += `<div class="card"><h4>${t('players')}</h4><div class="list">`;
+        players.slice().reverse().slice(0,8).forEach(p=>{
+          const imgSrc = findPlayerImageByName(p.name);
+          html += `<div class="item" role="article"><div class="avatar">${imgSrc?`<img src="${imgSrc}" alt="${p.name}">`:''}</div><div style="flex:1;text-align:right"><strong>${p.name}</strong><div class="muted">${(p.sports||p.sport||[]).join ? (p.sports||[]).join(', '): p.sport} • ${p.country||''}</div></div><div><button class="btn" onclick="viewPlayer('${p.id}')">${t('view')}</button></div></div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // DISCOVER
+      else if(page === 'discover'){
+        html += `<div class="card"><h3>${t('discover')}</h3><div class="muted">${t('filter_desc')}</div><div style="margin-top:10px"><select id="f_sport"><option value="">-- ${t('search')} ${t('players')} --</option>${SPORTS_OPTIONS()}</select><input id="f_country" placeholder="${t('discover_country_ph')}"><div style="margin-top:8px"><button class="btn" onclick="applyFilter()">${t('search')}</button></div></div></div><div id="discover-results"></div>`;
+      }
+
+      // MESSAGE
+      else if(page === 'message'){
+        html += `<div class="card"><h3>${t('message')}</h3><div class="muted">${t('direct_chat')}</div></div>`;
+      }
+
+      // MATCHES
+      else if(page === 'matches'){
+        html += `<div class="card"><h3>${t('matches')}</h3><div class="muted">${t('matches_desc')}</div></div>`;
+      }
+
+      // PROFILE (enhanced)
+      else if(page === 'profile'){
+        if(!me) {
+          html += `<div class="card"><h3>${t('profile')}</h3><p class="muted">${t('sign_in_pi')} <button class="btn" onclick="piSignIn()">${t('register')}</button></p></div>`;
+        } else {
+          html += `<div class="card"><h3>${me.name}</h3><div style="display:flex;gap:12px;flex-wrap:wrap"><div style="min-width:160px"><strong>${t('wallet_label')}</strong><div class="muted">${me.wallet||'—'}</div></div><div style="min-width:160px"><strong>${t('country_label')}</strong><div class="muted">${me.country||'—'}</div></div><div style="min-width:160px"><strong>${t('sport_label')}</strong><div class="muted">${(me.sports||[]).join(', ')||'—'}</div></div></div><div style="margin-top:10px"><button class="btn" onclick="editProfile()">${t('edit_profile')}</button></div></div>`;
+        }
+      }
+
+      // BECOME ATHLETE
+      else if(page === 'become'){
+        html += `<div class="card"><h3>${t('become')}</h3><input id="b_name" placeholder="${t('full_name')}" /><input id="b_email" placeholder="${t('email')}" /><input id="b_sports" placeholder="${t('sports_ph')}" /><input id="b_country" placeholder="${t('country')}" /><input id="b_video" placeholder="${t('youtube_optional')}" /><div style="margin-top:8px"><button class="btn" onclick="becomeAthlete()">${t('submit')}</button></div></div>`;
+      }
+
+      // AI ANALYSIS
+      else if(page === 'aianalysis'){
+        html += `<div class="card"><h3>${t('aianalysis')}</h3><div class="muted">${t('ai_desc')}</div><div style="margin-top:8px"><button class="btn" onclick="runAI()">${t('run_ai')}</button></div><div id="ai-output" style="margin-top:8px"></div></div>`;
+      }
+
+      // PI TALK
+      else if(page === 'pitalk'){
+        html += `<div class="card"><h3>${t('pitalk')}</h3><div class="muted">${t('pitalk_desc')}</div></div>`;
+      }
+
+      // PARALYMPIC
+      else if(page === 'paralympic'){
+        html += `<div class="card"><h3>${t('paralympic')}</h3><div class="muted">${t('paralympic_desc')}</div></div>`;
+      }
+
+      // SCOUT DASHBOARD
+      else if(page === 'scoutdashboard'){
+        html += `<div class="card"><h3>${t('scoutdashboard')}</h3><div class="muted">${t('scout_desc')}</div></div>`;
+      }
+
+      // COMMUNITY
+      else if(page === 'community'){
+        html += `<div class="card"><h3>${t('community')}</h3><div class="muted">${t('community_desc')}</div></div>`;
+      }
+
+      // CROWDFUNDING
+      else if(page === 'crowdfunding'){
+        html += `<div class="card"><h3>${t('crowdfunding')}</h3><div class="muted">${t('crowdfunding_desc')}</div></div>`;
+      }
+
+      // WALLET
+      else if(page === 'wallet'){
+        const w = JSON.parse(localStorage.getItem(STORAGE.WALLET) || '{}');
+        html += `<div class="card"><h3>${t('wallet')}</h3><p class="muted">${t('address_label')}: <strong class="wrap-anywhere" style="color:var(--accent-2);display:inline-block">${APP_ADDRESS}</strong></p><p class="muted">${t('balance')}: <strong id="bal">${w.balance||0} Pi</strong></p><div style="margin-top:8px"><button class="btn" onclick="copyAddress()">${t('copy_address')}</button> <button class="btn ghost" onclick="toggleNetwork()">${w.network||'testnet'}</button></div><hr /><div><h4>${t('send_title')}</h4><input id="send_to" placeholder="GC..." /><input id="send_amt" placeholder="${t('pi_amount_ph')}" type="number" /><div style="margin-top:8px"><button class="btn" onclick="doSend()">${t('send')}</button></div></div><div style="margin-top:12px"><h4>${t('receive_title')}</h4><p class="muted">${t('use_address_receive')}</p></div><div style="margin-top:10px"><h5>${t('transactions_title')}</h5><div id="txs"></div></div></div>`;
+      }
+
+      // SETTINGS
+      else if(page === 'settings'){
+        const fee = localStorage.getItem(STORAGE.APP_FEE) || '10';
+        html += `<div class="card"><h3>${t('settings')}</h3><label>${t('app_commission')}</label><input id="setting_fee" type="number" value="${fee}" /><div style="margin-top:8px"><button class="btn" onclick="saveSettings()">${t('save')}</button></div><hr /><div class="muted">${t('dev_note')}</div></div>`;
+      }
+
+      // TEAM TOKENS
+      else if(page === 'teamtokens'){
+        const tokens = JSON.parse(localStorage.getItem('sm_team_tokens')||'[]');
+        html += `<div class="card"><h3>${t('team_tokens')}</h3><div class="list">`;
+        tokens.forEach(tk=>{
+          html += `<div class="item"><div style="width:64px;height:64px;border-radius:8px;overflow:hidden"><img src="${tk.image}" alt="${tk.team}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1;text-align:right"><strong>${tk.team}</strong><div class="muted">${t('price')}: ${tk.price} Pi</div></div><div><button class="btn" onclick="buyToken('${tk.id}')">${t('buy')}</button></div></div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // NFT PLAYERS
+      else if(page === 'nftplayers'){
+        const nfts = JSON.parse(localStorage.getItem('sm_nft_players')||'[]');
+        html += `<div class="card"><h3>${t('nft_players')}</h3><div class="list">`;
+        nfts.forEach(n=>{
+          html += `<div class="item"><div style="width:64px;height:64px;border-radius:8px;overflow:hidden"><img src="${n.image}" alt="${n.name}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1;text-align:right"><strong>${n.name}</strong><div class="muted">${n.team} • ${t('value')}: ${n.value} Pi</div></div><div><button class="btn" onclick="viewNFT('${n.id}')">${t('view')}</button></div></div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // MARKETPLACE (stores list)
+      else if(page === 'marketplace'){
+        const stores = JSON.parse(localStorage.getItem('sm_stores')||'[]');
+        html += `<div class="card"><h3>${t('marketplace')}</h3><div class="muted">${t('marketplace_desc')}</div><div class="list">`;
+        stores.forEach(s=>{
+          html += `<div class="item"><div style="width:64px;height:64px;border-radius:8px;overflow:hidden"><img src="${s.image}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1;text-align:right"><strong>${s.name}</strong><div class="store-desc">${s.short||''}</div></div><div><button class="btn" onclick="visitStore('${s.id}')">${t('visit')}</button></div></div>`;
+        });
+        html += `</div></div>`;
+      }
+
+      // APP INTRO (about)
+      else if(page === 'appintro'){
+        html += `<div class="card"><h3>${t('about_app')}</h3><div class="muted">ScoutMe — منصة لاكتشاف المواهب ودمجها مع Web3. استكشف، استثمر، وطوّر مواهبك. يمكنك ربط متاجر Pi، توكنات الفرق، وNFTs داخل التطبيق.</div></div>`;
+      }
+
+      c.innerHTML = html;
+
+      renderMobileNav();
+
+      // post-render hooks
+      if(page === 'discover') renderDiscover();
+      if(page === 'wallet') renderTxs();
+      const enter = c.querySelector('.fade-enter');
+      if(enter){ enter.classList.add('fade-enter-active'); setTimeout(()=> enter.remove(),350) }
+    },10);
+  }
+
+  // ----- Exposed navigation -----
+  function navigate(p){ showPage(p) }
+  window.navigate = navigate;
+
+  // ----- Wallet helpers (simulated) -----
+  function copyAddress(){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(APP_ADDRESS).then(()=> alert(t('address_copied'))).catch(()=> prompt(t('copy_address')+':', APP_ADDRESS));
+      return;
+    }
+    prompt(t('copy_address')+':', APP_ADDRESS);
+  }
+  function toggleNetwork(){
+    const w = JSON.parse(localStorage.getItem(STORAGE.WALLET) || '{}');
+    w.network = w.network === 'mainnet' ? 'testnet' : 'mainnet';
+    localStorage.setItem(STORAGE.WALLET, JSON.stringify(w));
+    showPage('wallet');
+    alert(t('network_switched') + ' ' + w.network);
+  }
+  function doSend(){
+    const to = document.getElementById('send_to').value.trim();
+    const amt = parseFloat(document.getElementById('send_amt').value);
+    if(!to || !amt) return alert(t('enter_address_amount'));
+    const w = JSON.parse(localStorage.getItem(STORAGE.WALLET) || '{}');
+    if(amt > (w.balance||0)) return alert(t('insufficient_balance'));
+    if(PI_API_KEY){
+      console.log('PI_API_KEY present client-side — recommend using serverless function instead for security.');
+    }
+    w.balance = +( (w.balance||0) - amt ).toFixed(6);
+    localStorage.setItem(STORAGE.WALLET, JSON.stringify(w));
+    const txs = JSON.parse(localStorage.getItem(STORAGE.TXS) || '[]');
+    txs.push({id:uid('tx'), when:new Date().toLocaleString(), type:'send', amount:amt, to});
+    localStorage.setItem(STORAGE.TXS, JSON.stringify(txs));
+    showPage('wallet');
+    alert(t('sent_simulated'));
+  }
+  function renderTxs(){
+    const txs = JSON.parse(localStorage.getItem(STORAGE.TXS) || '[]');
+    const el = document.getElementById('txs');
+    if(!el) return;
+    el.innerHTML = txs.slice().reverse().map(t=> `<div class="card" style="padding:8px;margin-bottom:6px">${t.when} • ${t.type} • ${t.amount} Pi • ${t.to||t.details||''}</div>`).join('') || `<div class="muted">${t('no_transactions')}</div>`;
+  }
+
+  // ----- Discover filters & helpers -----
+  function SPORTS_OPTIONS() {
+  return [''].concat([
+    'كرة قدم','كرة سلة','تنس','سباحة','رفع أثقال','هوكي','جمباز',
+    'كرة طائرة','كرة يد','ملاكمة','جودو','كاراتيه','كونغ فو','تايكوندو',
+    'ركض','دراجات','رماية','تزلج','غولف','فروسية','شطرنج',
+    'كرة قاعدة','رجبي','تسلق جبال','تجديف','ترياتلون','سباق سيارات','سباق دراجات نارية',
+    'مصارعة','باركور','ركوب أمواج','بلياردو','بولينغ','هوكي جليدي','هوكي ميداني',
+    'سكواش','بادمنتون','تنس طاولة','سباقات السرعة','ماراثون','سباقات خيل','فن قتالي مختلط (MMA)',
+    'رياضات إلكترونية','ألعاب استراتيجية','البادل','الكيك بوكسينغ','اليوغا','الزومبا',
+    'سلاح الشيش','رمي القرص','رمي الرمح','القفز الطويل','القفز بالزانة','الجمباز الإيقاعي',
+    'كرة الماء','التزلج على الجليد','التزلج على اللوح','الدرِفت','الراليات','سباقات القوارب',
+    'الوثب الثلاثي','الوثب العالي','سباق الحواجز','الرماية بالقوس','التايبو','سباقات السرعة القصيرة'
+  ]).map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+  function applyFilter(){
+    const sport = document.getElementById('f_sport').value;
+    const country = document.getElementById('f_country').value.trim();
+    renderDiscover(sport,country);
+  }
+  function renderDiscover(sport='',country=''){
+    const players = JSON.parse(localStorage.getItem(STORAGE.PLAYERS) || '[]');
+    const results = document.getElementById('discover-results');
+    const filtered = players.filter(p=>{
+      if(sport && !( (p.sports||[]).join(' ').includes(sport) || (p.sport||'').includes(sport) )) return false;
+      if(country && !(p.country||'').toLowerCase().includes(country.toLowerCase())) return false;
+      return true;
+    });
+    results.innerHTML = `<div class="card"><h4>${t('players')}</h4>` + (filtered.length? filtered.map(p=>{
+      const imgSrc = findPlayerImageByName(p.name);
+      return `<div class="item"><div class="avatar">${imgSrc?`<img src="${imgSrc}" alt="${p.name}">`:''}</div><div style="flex:1;text-align:right"><strong>${p.name}</strong><div class="muted">${(p.sports||p.sport||[]).join ? (p.sports||p.sport||[]).join(', '):p.sport} • ${p.country||''}</div></div><div><button class="btn" onclick="viewPlayer('${p.id}')">${t('view')}</button></div></div>`;
+    }).join('') : `<div class="muted">${t('no_results')}</div>`) + `</div>`;
+  }
+
+  // ----- Player view & interactions -----
+  function viewPlayer(id){
+    const players = JSON.parse(localStorage.getItem(STORAGE.PLAYERS) || '[]');
+    const p = players.find(x=>x.id===id);
+    if(!p) return alert(t('player_not_found'));
+    const imgSrc = findPlayerImageByName(p.name);
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="card" style="display:flex;gap:12px;align-items:center"><div style="width:180px;height:140px;border-radius:12px;overflow:hidden">${imgSrc?`<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover">`:`<div style="width:100%;height:100%;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center" class="muted">${t('no_image')}</div>`}</div><div style="flex:1;text-align:right"><h3>${p.name}</h3><div class="muted">${(p.sports||[]).join(', ')} • ${p.country||''}</div><p>${t('age')}: ${p.age||'-'} • ${t('exp')}: ${p.exp||'-'}</p>${p.video?`<p><button class="btn" onclick="window.open('${p.video}','_blank')">🎬 ${t('video')}</button></p>`:''}<p style="margin-top:8px"><button class="btn" onclick="requestContact('${p.id}')">${t('request_contact')}</button></p><p style="margin-top:8px"><button class="btn ghost" onclick="showPage('discover')">${t('back')}</button></p></div></div>`;
+  }
+
+  async function requestContact(playerId){
+    const feePct = Number(localStorage.getItem(STORAGE.APP_FEE) || 10);
+    const w = JSON.parse(localStorage.getItem(STORAGE.WALLET) || '{}');
+    const ask = confirm(t('pay_contact_prompt').replace('{fee}', feePct));
+    if(!ask) return;
+    if((w.balance||0) < 1) return alert(t('insufficient_balance'));
+    w.balance = +( (w.balance||0) - 1 ).toFixed(6);
+    localStorage.setItem(STORAGE.WALLET, JSON.stringify(w));
+    const txs = JSON.parse(localStorage.getItem(STORAGE.TXS) || '[]');
+    txs.push({id:uid('tx'), when:new Date().toLocaleString(), type:'contact_fee', amount:1, details:`for player ${playerId}`});
+    localStorage.setItem(STORAGE.TXS, JSON.stringify(txs));
+    alert(t('contact_paid'));
+    showPage('discover');
+  }
+
+  // ----- Become athlete -----
+  function becomeAthlete(){
+    const name = document.getElementById('b_name').value.trim();
+    const email = document.getElementById('b_email').value.trim();
+    if(!name||!email) return alert(t('name_email_required'));
+    const players = JSON.parse(localStorage.getItem(STORAGE.PLAYERS) || '[]');
+    const p = {id:uid('pl'), name, sports:(document.getElementById('b_sports').value||'').split(',').map(s=>s.trim()).filter(Boolean), country:document.getElementById('b_country').value||'', video:document.getElementById('b_video').value||''};
+    players.push(p); localStorage.setItem(STORAGE.PLAYERS, JSON.stringify(players));
+    alert(t('submitted_player'));
+    showPage('home');
+  }
+
+  // ----- AI simulated -----
+  function runAI(){
+    const out = document.getElementById('ai-output');
+    if(!out) return;
+    out.innerHTML = '<div class="muted">'+t('ai_running')+'</div>';
+    setTimeout(()=> out.innerHTML = '<div class="card"><strong>'+t('ai_report')+'</strong><p class="muted">'+t('ai_report_body')+'</p></div>', 1400);
+  }
+
+  // ----- Settings -----
+  function saveSettings(){ const v = document.getElementById('setting_fee').value || '10'; localStorage.setItem(STORAGE.APP_FEE, v); alert(t('settings_saved')); }
+
+  // ----- Registration overlay logic -----
+  const regOverlay = $('reg-overlay');
+  const btnPi = $('btn-pi');
+  const btnGuest = $('btn-guest');
+
+  function showRegOverlay(){
+    const me = JSON.parse(localStorage.getItem(STORAGE.ME) || 'null');
+    if(me) return;
+    const seen = localStorage.getItem('sm_seen_overlay');
+    if(seen === 'true') return;
+    regOverlay.style.display = 'flex';
+  }
+
+  btnPi.addEventListener('click', ()=> piSignIn());
+
+  btnGuest.addEventListener('click', ()=>{
+    localStorage.setItem('sm_seen_overlay','true');
+    regOverlay.style.display = 'none';
+    initApp();
+  });
+
+  // ----- User action area (top-right) -----
+  function updateUserAction(){
+    const me = JSON.parse(localStorage.getItem(STORAGE.ME) || 'null');
+    const ua = document.getElementById('user-action');
+    if(!ua) return;
+    if(me){
+      ua.innerHTML = `<div style="text-align:right"><div style="font-weight:700">${me.name}</div><div class="muted">${(me.sports||me.sport||'')}</div><button class="btn ghost" id="logoutBtn">${t('logout')}</button></div>`;
+      document.getElementById('logoutBtn').onclick = ()=>{ localStorage.removeItem(STORAGE.ME); location.reload(); }
+    } else {
+      ua.innerHTML = `<button class="btn" id="regBtn">${t('register')}</button>`;
+      document.getElementById('regBtn').onclick = ()=> piSignIn();
+    }
+  }
+
+  // ----- Profile editing UI ----- 
+  function editProfile(){
+    const me = JSON.parse(localStorage.getItem(STORAGE.ME) || 'null');
+    if(!me) return piSignIn();
+    const content = document.getElementById('content');
+    content.innerHTML = `<div class="card"><h3>${t('edit_profile_title')}</h3><input id="edit_name" value="${escapeHtml(me.name||'')}" placeholder="${t('name_ph')}" /><input id="edit_wallet" value="${escapeHtml(me.wallet||'')}" placeholder="${t('wallet_address_ph')}" /><input id="edit_country" value="${escapeHtml(me.country||'')}" placeholder="${t('country')}" /><input id="edit_sports" value="${escapeHtml((me.sports||[]).join(', '))}" placeholder="${t('sports_ph2')}" /><div style="margin-top:8px"><button class="btn" onclick="saveProfileEdits()">${t('save')}</button> <button class="btn ghost" onclick="showPage('profile')">${t('cancel')}</button></div></div>`;
+  }
+  function saveProfileEdits(){
+    const me = JSON.parse(localStorage.getItem(STORAGE.ME) || 'null');
+    if(!me) return alert(t('no_user'));
+    me.name = document.getElementById('edit_name').value.trim();
+    me.wallet = document.getElementById('edit_wallet').value.trim();
+    me.country = document.getElementById('edit_country').value.trim();
+    me.sports = (document.getElementById('edit_sports').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    localStorage.setItem(STORAGE.ME, JSON.stringify(me));
+    alert(t('profile_updated'));
+    initApp();
+  }
+
+  // ----- AddOns: seed NFT players, team tokens, stores (images from image/) -----
+  function seedAddOns() {
+    const basePath = BASE_IMG;
+    if (!localStorage.getItem('sm_nft_players')) {
+     const nftPlayers = [
+  {id:'nft1', name:'Elyes Skiri', image:`${basePath}/players/player_elyes_skiri.png`, value:90},
+  {id:'nft2', name:'Hannibal Mejbri', image:`${basePath}/players/player_hannibal.png`, value:95},
+  {id:'nft3', name:'Achraf Hakimi', image:`${basePath}/players/player_achraf_hakimi.png`, value:110},
+  {id:'nft4', name:'Ismail Bennacer', image:`${basePath}/players/player_ismail_bennacer.png`, value:105},
+  {id:'nft5', name:'Riyad Mahrez', image:`${basePath}/players/player_riyad_mahrez.png`, value:108},
+  {id:'nft6', name:'Brahim Diaz', image:`${basePath}/players/player_brahim_diaz.png`, value:100},
+  {id:'nft7', name:'Cristiano Ronaldo', image:`${basePath}/players/player_cristiano_ronaldo.png`, value:100},
+  {id:'nft8', name:'Lionel Messi', image:`${basePath}/players/player_lionel_messi.png`, value:110},
+  {id:'nft9', name:'Kylian Mbappé', image:`${basePath}/players/player_kylian_mbappe.png`, value:120},
+  {id:'nft10', name:'Mohamed Salah', image:`${basePath}/players/player_mohamed_salah.png`, value:105},
+  {id:'nft11', name:'Neymar Jr', image:`${basePath}/players/player_neymar_jr.png`, value:115},
+  {id:'nft12', name:'Karim Benzema', image:`${basePath}/players/player_karim_benzema.png`, value:108},
+  {id:'nft13', name:'Sadio Mané', image:`${basePath}/players/player_sadio_mane.png`, value:107},
+  {id:'nft14', name:'Erling Haaland', image:`${basePath}/players/player_erling_haaland.png`, value:118},
+  {id:'nft15', name:'Robert Lewandowski', image:`${basePath}/players/player_robert_lewandowski.png`, value:112},
+  {id:'nft16', name:'Kevin De Bruyne', image:`${basePath}/players/player_kevin_de_bruyne.png`, value:110}
+];
+
+localStorage.setItem('sm_nft_players', JSON.stringify(nftPlayers));
+    }
+
+    if (!localStorage.getItem('sm_team_tokens')) {
+     const tokens = [
+  {id:'tok1', team:'Mostakbal Kasserine', image:`${basePath}/teams/team_mostakbal_kasserine.png`, price:5},
+  {id:'tok2', team:'Etoile du Sahel', image:`${basePath}/teams/team_etoile_du_sahel.png`, price:5},
+  {id:'tok3', team:'CS Sfaxien', image:`${basePath}/teams/team_cs_sfaxi.png`, price:5},
+  {id:'tok4', team:'Club Africain', image:`${basePath}/teams/team_club_africain.png`, price:6},
+  {id:'tok5', team:'Union Monastir', image:`${basePath}/teams/team_union_monastir.png`, price:5},
+  {id:'tok6', team:'Manchester City', image:`${basePath}/teams/team_manchester_city.png`, price:5},
+  {id:'tok7', team:'Paris Saint-Germain', image:`${basePath}/teams/team_paris_saint_germain.png`, price:6},
+  {id:'tok8', team:'FC Barcelona', image:`${basePath}/teams/team_fc_barcelona.png`, price:4},
+  {id:'tok9', team:'Real Madrid', image:`${basePath}/teams/team_real_madrid.png`, price:5},
+  {id:'tok10', team:'Esperance', image:`${basePath}/teams/team_esperance.png`, price:5},
+  {id:'tok11', team:'Zamalek', image:`${basePath}/teams/team_zamalek.png`, price:5},
+  {id:'tok12', team:'Al Ahly', image:`${basePath}/teams/team_al_ahly.png`, price:6},
+  {id:'tok13', team:'Al Ittihad', image:`${basePath}/teams/team_al_ittihad.png`, price:6},
+  {id:'tok14', team:'Al Hilal', image:`${basePath}/teams/team_al_hilal.png`, price:7},
+  {id:'tok15', team:'Al Nassr', image:`${basePath}/teams/team_al_nassr.png`, price:7},
+  {id:'tok16', team:'USM Alger', image:`${basePath}/teams/team_usm_alger.png`, price:5},
+  {id:'tok17', team:'MC Alger', image:`${basePath}/teams/team_mca_alger.png`, price:5},
+  {id:'tok18', team:'JS Kabylie', image:`${basePath}/teams/team_js_kabylie.png`, price:5},
+  {id:'tok19', team:'CR Belouizdad', image:`${basePath}/teams/team_cr_belouizdad.png`, price:6},
+  {id:'tok20', team:'Wydad AC', image:`${basePath}/teams/team_wydad.png`, price:6},
+  {id:'tok21', team:'Raja CA', image:`${basePath}/teams/team_rajac.png`, price:6},
+  {id:'tok22', team:'RS Berkane', image:`${basePath}/teams/team_berkane.png`, price:5},
+  {id:'tok23', team:'AS FAR', image:`${basePath}/teams/team_as_far.png`, price:5},
+  {id:'tok24', team:'Pyramids', image:`${basePath}/teams/team_pyramids.png`, price:5},
+  {id:'tok25', team:'Ismaily', image:`${basePath}/teams/team_ismaily.png`, price:5},
+  {id:'tok26', team:'Al Sadd', image:`${basePath}/teams/team_al_sadd.png`, price:5},
+  {id:'tok27', team:'Al Duhail', image:`${basePath}/teams/team_al_duhail.png`, price:5},
+  {id:'tok28', team:'Liverpool', image:`${basePath}/teams/team_liverpool.png`, price:5},
+  {id:'tok29', team:'AC Milan', image:`${basePath}/teams/team_ac_milan.png`, price:5},
+  {id:'tok30', team:'Bayern Munich', image:`${basePath}/teams/team_bayern_munich.png`, price:5},
+  {id:'tok31', team:'Juventus', image:`${basePath}/teams/team_juventus.png`, price:5},
+  {id:'tok32', team:'Inter Milan', image:`${basePath}/teams/team_inter_milan.png`, price:5},
+  {id:'tok33', team:'Valencia', image:`${basePath}/teams/team_valencia.png`, price:5},
+  {id:'tok34', team:'Arsenal', image:`${basePath}/teams/team_arsenal.png`, price:5},
+  {id:'tok35', team:'Atletico Madrid', image:`${basePath}/teams/team_atletico_madrid.png`, price:5},
+  {id:'tok36', team:'Borussia Dortmund', image:`${basePath}/teams/team_borussia_dortmund.png`, price:5},
+  {id:'tok37', team:'RB Leipzig', image:`${basePath}/teams/team_rb_leipzig.png`, price:5},
+  {id:'tok38', team:'Bayer Leverkusen', image:`${basePath}/teams/team_bayer_leverkusen.png`, price:5},
+  {id:'tok39', team:'OM Marseille', image:`${basePath}/teams/team_om_marseille.png`, price:5},
+  {id:'tok40', team:'AS Monaco', image:`${basePath}/teams/team_as_monaco.png`, price:5},
+  {id:'tok41', team:'OL Lyon', image:`${basePath}/teams/team_ol_lyon.png`, price:5},
+  {id:'tok42', team:'LOSC Lille', image:`${basePath}/teams/team_losc_lille.png`, price:5}
+];
+
+localStorage.setItem('sm_team_tokens', JSON.stringify(tokens));
+    }
+
+    if (!localStorage.getItem('sm_stores')) {
+      const stores = [
+        {id:'store_1pi_mall', name:'1Pi Mall', image:`${basePath}/stores/store_1pi_mall.png`, short:'سوق إلكتروني في منظومة Pi لبيع وشراء السلع والخدمات بـ Pi', details:'يمكن ربطه كجزء من Marketplace: اللاعب أو النادي يمكنهم عرض منتجات رياضية أو تجهيزات، والمشجعون يشترونها بـ Pi عبر التطبيق.'},
+        {id:'store_pitogo', name:'Pitogo', image:`${basePath}/stores/store_pitogo.png`, short:'منصة سفر/خدمات سياحية ضمن منظومة Pi', details:'ضمن Marketplace: يمكن للاعبين أو الأندية الترويج لــ “تجربة سفر” لمشجعين أو كشّافين، أو عرض باقات الرياضة + السفر.'},
+        {id:'store_watugot', name:'Watugot', image:`${basePath}/stores/store_watugot.png`, short:'منصة تداول وخدمات محلية تستخدم Pi', details:'يمكن للاعب أو نادي أن يعرض خدمة “جلسة تدريب” أو “تدريب فردي” ويُدفع بـ Pi عبر Watugot داخل Marketplace.'},
+        {id:'store_workforce', name:'Workforce', image:`${basePath}/stores/store_workforce.png`, short:'منصة فرص عمل ومشاريع Freelance', details:'في Marketplace: متجر “خدمات الكشّافين” أو “استشارات رياضية” — الكشاف يعرض خدمة، واللاعب أو النادي يدفع بـ Pi.'},
+        {id:'store_map_of_pi', name:'Map of Pi', image:`${basePath}/stores/store_map_of_pi.png`, short:'دليل للأعمال التي تقبل Pi حول العالم', details:'يمكن تضمينه كقسم “الشركاء المحليين” — عرض أماكن ومحلات ومعسكرات تقبل Pi وتربطهم باللاعبين.'},
+        {id:'store_app_link', name:'App Link', image:`${basePath}/stores/store_app_link.png`, short:'منصة لعرض تطبيقات ومشاريع Pi', details:'يمكن أن تكون “متجر التطبيقات الرياضية” عبر Pi — شراء/تحميل تطبيقات وأدوات مساعدة عن طريق Pi.'},
+        {id:'store_daabia_mall', name:'Daabia Mall', image:`${basePath}/stores/store_daabia_mall.png`, short:'منصة تجارة إلكترونية Web3 ضمن منظومة Pi', details:'متجر لبيع المقتنيات الرياضية الأصلية، سلع موقعة من اللاعب، أو NFT خاصة بالبث المباشر.'},
+        {id:'store_latinchain', name:'LatinChain', image:`${basePath}/stores/store_latinchain.png`, short:'منصة ألعاب وخدمات في أمريكا اللاتينية', details:'متجر “ألعاب وتدريب تفاعلي” — شراء دروس تفاعلية أو ألعاب تدريبية بـ Pi.'},
+        {id:'store_pet_for_pi', name:'Pet for Pi', image:`${basePath}/stores/store_pet_for_pi.png`, short:'متجر/خدمات مجتمعية/رفاهية', details:'متجر رعاية اللياقة أو خدمات رفاهية للاعبين — يمكن تخصيصه لصحة الرياضي وخدمات الرفاهية.'}
+      ];
+      localStorage.setItem('sm_stores', JSON.stringify(stores));
+    }
+  }
+  seedAddOns();
+
+  // ----- Add navigation for add-ons in bottom nav (if present) -----
+  function addBottomNavExtra(){
+    const bottomNav = document.getElementById('bottomNav');
+    if(bottomNav){
+      const extras = ['teamtokens','nftplayers','marketplace'];
+      extras.forEach(ep=>{
+        if(!Array.from(bottomNav.children).some(btn=>btn.title===ep)){
+          const btn = document.createElement('button');
+          btn.textContent = ep==='teamtokens'?'🪙':ep==='nftplayers'?'🎨':'🌐';
+          btn.title = ep;
+          btn.onclick = ()=> showPage(ep);
+          bottomNav.appendChild(btn);
+        }
+      });
+    }
+  }
+
+  // ----- Add-on actions: buy token, view/buy NFT, visit store -----
+  function buyToken(id){
+    const tokens = JSON.parse(localStorage.getItem('sm_team_tokens')||'[]');
+    const tok = tokens.find(t=>t.id===id);
+    if(!tok) return alert(t('token_not_found'));
+    const w = JSON.parse(localStorage.getItem(STORAGE.WALLET) || '{}');
+    if((w.balance||0) < tok.price) return alert(t('insufficient_balance'));
+    if(!confirm(t('buy_token_confirm').replace('{team}', tok.team).replace('{price}', tok.price))) return;
+    w.balance = +( (w.balance||0) - tok.price ).toFixed(6);
+    localStorage.setItem(STORAGE.WALLET, JSON.stringify(w));
+    const txs = JSON.parse(localStorage.getItem(STORAGE.TXS) || '[]');
+    txs.push({id:uid('tx'), when:new Date().toLocaleString(), type:'buy_token', amount:tok.price, details:tok.team});
+    localStorage.setItem(STORAGE.TXS, JSON.stringify(txs));
+    alert(t('purchased_simulated'));
+    showPage('teamtokens');
+  }
+
+  function viewNFT(id){
+    const nfts = JSON.parse(localStorage.getItem('sm_nft_players')||'[]');
+    const n = nfts.find(x=>x.id===id);
+    if(!n) return alert(t('not_found'));
+    document.getElementById('content').innerHTML = `<div class="card" style="display:flex;gap:12px;align-items:center"><div style="width:220px;height:140px;border-radius:12px;overflow:hidden"><img src="${n.image}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1;text-align:right"><h3>${n.name}</h3><div class="muted">${n.team}</div><p class="muted">${t('value')}: ${n.value} Pi</p><div style="margin-top:8px"><button class="btn" onclick="buyNFT('${n.id}')">${t('buy_nft')}</button> <button class="btn ghost" onclick="showPage('nftplayers')">${t('back')}</button></div></div></div>`;
+  }
+
+  function buyNFT(id){
+    const nfts = JSON.parse(localStorage.getItem('sm_nft_players')||'[]');
+    const nft = nfts.find(n=>n.id===id);
+    if(!nft) return alert(t('not_found'));
+    const w = JSON.parse(localStorage.getItem(STORAGE.WALLET) || '{}');
+    if((w.balance||0) < nft.value) return alert(t('insufficient_balance'));
+    if(!confirm(t('buy_nft_confirm').replace('{name}', nft.name).replace('{price}', nft.value))) return;
+    w.balance = +( (w.balance||0) - nft.value ).toFixed(6);
+    localStorage.setItem(STORAGE.WALLET, JSON.stringify(w));
+    const txs = JSON.parse(localStorage.getItem(STORAGE.TXS) || '[]');
+    txs.push({id:uid('tx'), when:new Date().toLocaleString(), type:'buy_nft', amount:nft.value, details:nft.name});
+    localStorage.setItem(STORAGE.TXS, JSON.stringify(txs));
+    alert(t('nft_purchased_simulated'));
+    showPage('nftplayers');
+  }
+
+  function visitStore(id){
+    const stores = JSON.parse(localStorage.getItem('sm_stores')||'[]');
+    const s = stores.find(x=>x.id===id);
+    if(!s) return alert(t('store_not_found'));
+    // show store page with description and "how integrate" block
+    document.getElementById('content').innerHTML = `<div class="card"><div style="display:flex;gap:12px;align-items:center"><div class="big-img"><img src="${s.image}" alt="${s.name}"></div><div style="flex:1;text-align:right"><h3>${s.name}</h3><div class="muted">${s.short||''}</div></div></div><div class="store-details"><h4>${t('how_integrates')}</h4><p class="muted">${s.details||t('description_not_available')}</p><div class="kpi"><div class="chip">شراكة متاجر Pi</div><div class="chip">قبول Pi</div><div class="chip">دمج منتجات/خدمات</div></div><div style="margin-top:10px"><button class="btn" onclick="showPage('marketplace')">${t('back')}</button></div></div></div>`;
+  }
+
+  // ----- Utility: find player images by name (mapping) -----
+  function findPlayerImageByName(name){
+    if(!name) return null;
+    const mapping = {
+      'cristiano': `${BASE_IMG}/players/player_cristiano_ronaldo.png`,
+      'ronaldo': `${BASE_IMG}/players/player_cristiano_ronaldo.png`,
+      'messi': `${BASE_IMG}/players/player_lionel_messi.png`,
+      'salah': `${BASE_IMG}/players/player_mohamed_salah.png`,
+      'neymar': `${BASE_IMG}/players/player_neymar_jr.png`,
+      'mbappe': `${BASE_IMG}/players/player_kylian_mbappe.png`,
+      'haaland': `${BASE_IMG}/players/player_erling_haaland.png`,
+      'lewandowski': `${BASE_IMG}/players/player_robert_lewandowski.png`,
+      'de_bruyne': `${BASE_IMG}/players/player_kevin_de_bruyne.png`,
+      'benzema': `${BASE_IMG}/players/player_karim_benzema.png`,
+      'sadio': `${BASE_IMG}/players/player_sadio_mane.png`
+    };
+    const key = name.toLowerCase().replace(/\s+/g,'_');
+    for(const k in mapping){
+      if(name.toLowerCase().includes(k) || key.includes(k)) return mapping[k];
+    }
+    return null;
+  }
+
+  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function ensureImageErrorHandler(){
+    if(window.__sm_img_err_handler_added) return;
+    window.__sm_img_err_handler_added = true;
+    document.addEventListener('error', (e)=>{
+      const t = e.target;
+      if(t && t.tagName === 'IMG'){
+        t.style.display = 'none';
+      }
+    }, true);
+  }
+
+  // ----- Init App -----
+  function initApp(){
+    if(!localStorage.getItem(STORAGE.LANG)) localStorage.setItem(STORAGE.LANG,'ar');
+    ensureImageErrorHandler();
+    renderLang();
+    updateUserAction();
+    showRegOverlay();
+    showPage(currentPage);
+    // add bottom extra buttons after DOM ready
+    setTimeout(addBottomNavExtra, 300);
+  }
+  initApp();
+
+  // ===========================
+  // End of script
+  // ===========================
+  

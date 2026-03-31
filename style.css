@@ -1,0 +1,150 @@
+
+    /* ===========================
+       Variables & base
+       =========================== */
+    :root {
+  --background-color: #121212;
+  --text-color: #fff;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+<!doctype html>
+<html lang="EN" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ScoutMe — Final</title>
+  <meta name="description" content="ScoutMe — multi-language demo with Pi wallet, clubs, scouts, AI placeholders" />
+  <style>
+    /* ===========================
+       Variables & base
+       =========================== */
+    :root{
+      --bg1: #04110a;
+      --bg2: #07140b;
+      --card: rgba(255,255,255,0.03);
+      --glass: rgba(255,255,255,0.04);
+      --accent:#18b63b;
+      --accent-2:#d4b24a;
+      --muted:#9aa8a0;
+      --text:#eaf8ee;
+      --radius:14px;
+      --trans:260ms cubic-bezier(.2,.9,.2,1);
+      --soft: rgba(255,255,255,0.02);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Tahoma,Arial,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--text);-webkit-font-smoothing:antialiased}
+    a{color:var(--accent)} img{max-width:100%;display:block}
+    .wrap{max-width:1200px;margin:8px auto;padding:14px}
+    header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:10px;z-index:1200;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:10px 12px;-webkit-backdrop-filter: blur(10px);backdrop-filter: blur(10px)}
+    #logo-box{width:68px;height:68px;border-radius:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 6px 20px rgba(8,12,8,0.6)}
+    #logo-box img{width:100%;height:100%;object-fit:contain;display:block}
+    #brand{flex:1;min-width:0}
+    .lang-select{display:flex;gap:6px}
+    .lang-select button{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+    .lang-select button.active{background:rgba(24,182,59,0.12);color:#fff;box-shadow:0 6px 18px rgba(24,182,59,0.06)}
+    .lang-toggle{background:transparent;border:1px solid rgba(255,255,255,0.08);padding:8px 12px;border-radius:12px;color:#fff;cursor:pointer;font-weight:800;letter-spacing:0.6px}
+    main{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+    aside.sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));padding:12px;border-radius:12px;min-height:520px;border:1px solid rgba(255,255,255,0.02)}
+    .navbtn{display:block;width:100%;text-align:right;padding:10px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;margin-bottom:6px;transition:var(--trans)}
+    .navbtn:hover{transform:translateX(-6px);color:#fff}
+    .navbtn.active{background:linear-gradient(90deg, rgba(24,182,59,0.12), rgba(212,178,74,0.03));color:#fff}
+    .content{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;padding-bottom:120px;border-radius:12px;min-height:72vh;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+    .card{background:rgba(255,255,255,0.02);padding:12px;border-radius:12px;margin-bottom:12px;-webkit-backdrop-filter: blur(4px);backdrop-filter: blur(4px)}
+    .btn{background:var(--accent);border:0;padding:8px 12px;border-radius:10px;color:#02120a;font-weight:700;cursor:pointer;box-shadow:0 8px 22px rgba(24,182,59,0.06)}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--text);margin-top:8px}
+    .list{margin-top:10px}
+    .item{display:flex;gap:10px;align-items:center;padding:10px;background:rgba(0,0,0,0.12);border-radius:10px;margin-bottom:8px;transition:var(--trans);align-items:center}
+    .item:hover{transform:translateX(-6px)}
+    .avatar{width:64px;height:64px;border-radius:10px;background:linear-gradient(90deg,#123,#234);flex-shrink:0;overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .muted{color:var(--muted);font-size:13px}
+    .wrap-anywhere{overflow-wrap:anywhere;word-break:break-word;max-width:100%}
+    .two{display:flex;gap:8px}
+    footer{margin-top:10px;color:var(--muted);text-align:center;font-size:13px}
+    @media(max-width:980px){main{grid-template-columns:1fr} aside.sidebar{order:2} .content{padding-bottom:120px} header{top:0;border-radius:0}}
+    @media(max-width:520px){
+      header{flex-wrap:nowrap;gap:8px;padding:8px 10px}
+      #logo-box{width:52px;height:52px}
+      #brand{overflow:hidden}
+      #brand > div{min-width:0}
+      #app-title{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #app-sub{display:none}
+      #current-page-name{display:none}
+      .lang-toggle{padding:7px 10px;border-radius:10px}
+      #user-action{max-width:140px;overflow:hidden}
+      #user-action > div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #user-action .muted{display:none}
+      #logoutBtn,#regBtn{padding:6px 8px;font-size:12px}
+    }
+
+    /* ===========================
+       زر AFCON Live Hub
+       =========================== */
+
+    /* ===========================
+       Background animated elements
+       =========================== */
+    .bg-layer{position:absolute;inset:0;pointer-events:none;z-index:0}
+    .bg-blob{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(80px);opacity:0.08;animation:float 10s ease-in-out infinite}
+    .bg-blob.b1{background:linear-gradient(90deg,var(--accent),var(--accent-2));left:-120px;top:-180px;transform:scale(1)} 
+    .bg-blob.b2{background:linear-gradient(90deg,#2e86a6,#7ed6df);right:-120px;bottom:-200px;animation-duration:14s}
+    @keyframes float{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(18px) rotate(12deg)}100%{transform:translateY(0) rotate(0deg)}}
+
+    /* page card header shimmer */
+    .card h3{margin:0 0 6px 0}
+    .muted-2{color:#cfe9d2;font-size:13px}
+    .badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-size:13px}
+
+    /* bottom nav */
+    .mobile-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:9999;width:min(520px, calc(100vw - 24px));padding:8px;background:rgba(0,0,0,0.42);border:1px solid rgba(255,255,255,0.06);border-radius:999px;-webkit-backdrop-filter: blur(10px);backdrop-filter: blur(10px);display:flex;gap:6px;align-items:center;justify-content:space-between}
+    .mobile-nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;background:transparent;border:0;color:rgba(255,255,255,0.82);padding:8px 8px;border-radius:999px;cursor:pointer;transition:var(--trans)}
+    .mobile-nav button .mi{font-size:18px;line-height:1}
+    .mobile-nav button .ml{font-size:11px;line-height:1;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .mobile-nav button.active{background:linear-gradient(90deg, rgba(24,182,59,0.22), rgba(212,178,74,0.10));color:#fff;box-shadow:0 10px 24px rgba(0,0,0,0.28)}
+    .mobile-nav button.active .ml{color:#fff}
+
+    /* registration overlay */
+    #reg-overlay{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.7));display:flex;align-items:center;justify-content:center;z-index:9999}
+    #reg-card{width:92%;max-width:520px;background:linear-gradient(180deg,#071a0f,#0b1f12);padding:18px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.02)}
+    #reg-card h2{margin:0 0 8px 0;font-size:20px}
+    #reg-card p{color:var(--muted);font-size:14px;margin-bottom:12px}
+    .reg-row{display:flex;gap:8px}
+    .reg-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+    /* Marketplace specific */
+    .store-desc{font-size:13px;color:var(--muted);margin-top:6px}
+    .store-details{margin-top:10px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .kpi{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .kpi .chip{background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:8px;font-size:13px;color:var(--muted)}
+    .big-img{width:220px;height:140px;border-radius:10px;overflow:hidden}
+    .big-img img{width:100%;height:100%;object-fit:cover}
+
+    /* focus */
+    button:focus,input:focus,select:focus,textarea:focus{outline:2px solid rgba(24,182,59,0.18)}
+
+    /* fade transition (used by JS) */
+    .fade-enter{opacity:0;transform:translateY(6px);transition:opacity 260ms ease, transform 260ms ease}
+    .fade-enter-active{opacity:1;transform:translateY(0)}
+
+    /* LTR adjustments when language is EN/FR */
+    [dir="ltr"] .navbtn{text-align:left}
+    [dir="ltr"] .navbtn:hover{transform:translateX(6px)}
+    [dir="ltr"] .item:hover{transform:translateX(6px)}
+    [dir="ltr"] header, [dir="ltr"] .item, [dir="ltr"] .content{text-align:left}
+
+    /* keep header layout stable (LTR) even when Arabic/RTL is selected */
+    [dir="rtl"] header{direction:ltr}
+    [dir="rtl"] #brand > div > div:first-child{direction:rtl;text-align:right}
+
+    /* keep bottom nav stable (LTR) even when Arabic/RTL is selected */
+    [dir="rtl"] .mobile-nav{direction:ltr}
+  
